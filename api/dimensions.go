@@ -114,9 +114,9 @@ func (api *DatasetAPI) createListOfDimensions(versionDoc *models.Version, dimens
 
 		dimension := models.Dimension{Name: opt.Name}
 		dimension.Links.CodeList = opt.Links.CodeList
-		dimension.Links.Options = models.LinkObject{ID: opt.Name, HRef: fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s/dimensions/%s/options",
+		dimension.Links.Options = &models.LinkObject{ID: opt.Name, HRef: fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s/dimensions/%s/options",
 			api.host, versionDoc.Links.Dataset.ID, versionDoc.Edition, versionDoc.Links.Version.ID, opt.Name)}
-		dimension.Links.Version = models.LinkObject{HRef: fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s",
+		dimension.Links.Version = &models.LinkObject{HRef: fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s",
 			api.host, versionDoc.Links.Dataset.ID, versionDoc.Edition, versionDoc.Links.Version.ID)}
 
 		// Add description to dimension from hash map

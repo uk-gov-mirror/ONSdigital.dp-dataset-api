@@ -51,8 +51,8 @@ func (m *Mongo) AddDimensionToInstance(opt *models.CachedDimensionOption) error 
 	defer s.Close()
 
 	option := models.DimensionOption{InstanceID: opt.InstanceID, Option: opt.Option, Name: opt.Name, Label: opt.Label}
-	option.Links.CodeList = models.LinkObject{ID: opt.CodeList, HRef: fmt.Sprintf("%s/code-lists/%s", m.CodeListURL, opt.CodeList)}
-	option.Links.Code = models.LinkObject{ID: opt.Code, HRef: fmt.Sprintf("%s/code-lists/%s/codes/%s", m.CodeListURL, opt.CodeList, opt.Code)}
+	option.Links.CodeList = &models.LinkObject{ID: opt.CodeList, HRef: fmt.Sprintf("%s/code-lists/%s", m.CodeListURL, opt.CodeList)}
+	option.Links.Code = &models.LinkObject{ID: opt.Code, HRef: fmt.Sprintf("%s/code-lists/%s/codes/%s", m.CodeListURL, opt.CodeList, opt.Code)}
 
 	option.LastUpdated = time.Now().UTC()
 	_, err := s.DB(m.Database).C(dimensionOptions).Upsert(bson.M{"instance_id": option.InstanceID, "name": option.Name,
@@ -97,7 +97,7 @@ func (m *Mongo) GetDimensionOptions(version *models.Version, dimension string) (
 	}
 
 	for i := 0; i < len(values); i++ {
-		values[i].Links.Version = *version.Links.Self
+		values[i].Links.Version = version.Links.Self
 	}
 
 	return &models.DimensionOptionResults{Items: values}, nil

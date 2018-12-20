@@ -80,7 +80,7 @@ func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
 		datasetFilterList = strings.Split(datasetFilterQuery, ",")
 	}
 
-	log.InfoCtx(ctx, "get list of instances", logData)
+	//	log.InfoCtx(ctx, "get list of instances", logData)
 
 	b, err := func() ([]byte, error) {
 		if len(stateFilterList) > 0 {
@@ -118,7 +118,7 @@ func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeBody(ctx, w, b)
-	log.InfoCtx(ctx, "get instances: request successful", logData)
+	//	log.InfoCtx(ctx, "get instances: request successful", logData)
 }
 
 //Get a single instance by id
@@ -129,7 +129,7 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 	auditParams := common.Params{"instance_id": instanceID}
 	logData := audit.ToLogData(auditParams)
 
-	log.InfoCtx(ctx, "get instance", logData)
+	//	log.InfoCtx(ctx, "get instance", logData)
 
 	b, err := func() ([]byte, error) {
 		instance, err := s.GetInstance(instanceID)
@@ -138,7 +138,7 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		log.InfoCtx(ctx, "instance get: checking instance state", logData)
+		//	log.InfoCtx(ctx, "instance get: checking instance state", logData)
 		// Early return if instance state is invalid
 		if err = models.CheckState("instance", instance.State); err != nil {
 			logData["state"] = instance.State
@@ -146,7 +146,7 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		log.InfoCtx(ctx, "instance get: marshalling instance json", logData)
+		//	log.InfoCtx(ctx, "instance get: marshalling instance json", logData)
 		b, err := json.Marshal(instance)
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "get instance: failed to marshal instance to json"), logData)
@@ -156,7 +156,7 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 		return b, nil
 	}()
 
-	log.InfoCtx(ctx, "instance get: auditing outcome", logData)
+	//	log.InfoCtx(ctx, "instance get: auditing outcome", logData)
 	if err != nil {
 		if auditErr := s.Auditor.Record(ctx, GetInstanceAction, audit.Unsuccessful, auditParams); auditErr != nil {
 			err = auditErr
@@ -171,7 +171,7 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeBody(ctx, w, b)
-	log.InfoCtx(ctx, "instance get: request successful", logData)
+	//	log.InfoCtx(ctx, "instance get: request successful", logData)
 }
 
 //Add an instance
@@ -272,7 +272,7 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 		datasetID := currentInstance.Links.Dataset.ID
 
 		//edition confirmation is a one time process - cannot be editted for an instance once done
-		if instance.State == models.EditionConfirmedState {
+		if instance.State == models.EditionConfirmedState && instance.Version == 0 {
 			if instance.Edition == "" {
 				instance.Edition = currentInstance.Edition
 			}

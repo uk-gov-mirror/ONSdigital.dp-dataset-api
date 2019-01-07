@@ -46,23 +46,23 @@ func Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		rc := &responseCapture{w, 0}
 
-		s := time.Now()
+		//	s := time.Now()
 		h.ServeHTTP(rc, req)
-		e := time.Now()
-		d := e.Sub(s)
+		//	e := time.Now()
+		//d := e.Sub(s)
 
 		data := Data{
-			"start":    s,
-			"end":      e,
-			"duration": d,
-			"status":   rc.statusCode,
-			"method":   req.Method,
-			"path":     req.URL.Path,
+		// "start":    s,
+		// "end":      e,
+		// "duration": d,
+		// "status":   rc.statusCode,
+		// "method":   req.Method,
+		// "path":     req.URL.Path,
 		}
 		if len(req.URL.RawQuery) > 0 {
 			data["query"] = req.URL.Query()
 		}
-		Event("request", GetRequestID(req), data)
+		//		Event("request", GetRequestID(req), data)
 	})
 }
 

@@ -88,7 +88,7 @@ func (a *Auditor) Record(ctx context.Context, attemptedAction string, actionResu
 		if err != nil {
 			LogActionFailure(ctx, attemptedAction, actionResult, err, ToLogData(params))
 		} else {
-			LogInfo(ctx, "captured audit event", log.Data{"auditEvent": e})
+		//	LogInfo(ctx, "captured audit event", log.Data{"auditEvent": e})
 		}
 	}()
 
@@ -102,7 +102,7 @@ func (a *Auditor) Record(ctx context.Context, attemptedAction string, actionResu
 	}
 
 	if user == "" {
-		log.DebugCtx(ctx, "not user attempted action: skipping audit event", nil)
+	//	log.DebugCtx(ctx, "not user attempted action: skipping audit event", nil)
 		return
 	}
 

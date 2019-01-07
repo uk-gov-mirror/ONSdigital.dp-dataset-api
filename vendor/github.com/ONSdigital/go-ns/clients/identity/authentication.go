@@ -43,7 +43,7 @@ type authFailure error
 
 // CheckRequest calls the AuthAPI to check florenceToken or authToken
 func (api Client) CheckRequest(req *http.Request) (context.Context, int, authFailure, error) {
-	log.DebugR(req, "CheckRequest called", nil)
+	//	log.DebugR(req, "CheckRequest called", nil)
 
 	ctx := req.Context()
 
@@ -76,7 +76,7 @@ func (api Client) CheckRequest(req *http.Request) (context.Context, int, authFai
 	}
 	splitTokens(florenceToken, authToken, logData)
 
-	log.DebugR(req, "calling AuthAPI to authenticate", logData)
+	//	log.DebugR(req, "calling AuthAPI to authenticate", logData)
 
 	outboundAuthReq, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -122,7 +122,7 @@ func (api Client) CheckRequest(req *http.Request) (context.Context, int, authFai
 
 	logData["user_identity"] = userIdentity
 	logData["caller_identity"] = identityResp.Identifier
-	log.DebugR(req, "identity retrieved, setting context values", logData)
+	//	log.DebugR(req, "identity retrieved, setting context values", logData)
 
 	ctx = context.WithValue(ctx, common.UserIdentityKey, userIdentity)
 	ctx = context.WithValue(ctx, common.CallerIdentityKey, identityResp.Identifier)

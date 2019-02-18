@@ -15,7 +15,7 @@ import (
 )
 
 func (api *DatasetAPI) getMetadata(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]

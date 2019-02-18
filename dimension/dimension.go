@@ -37,7 +37,7 @@ func dimensionError(err error, message, action string) error {
 
 // GetDimensionsHandler returns a list of all dimensions and their options for an instance resource
 func (s *Store) GetDimensionsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
@@ -94,7 +94,7 @@ func (s *Store) getDimensions(ctx context.Context, instanceID string, logData lo
 
 // GetUniqueDimensionAndOptionsHandler returns a list of dimension options for a dimension of an instance
 func (s *Store) GetUniqueDimensionAndOptionsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
@@ -155,7 +155,7 @@ func (s *Store) AddHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 
 	vars := mux.Vars(r)
@@ -216,7 +216,7 @@ func (s *Store) add(ctx context.Context, instanceID string, option *models.Cache
 // AddNodeIDHandler against a specific option for dimension
 func (s *Store) AddNodeIDHandler(w http.ResponseWriter, r *http.Request) {
 
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]

@@ -19,7 +19,7 @@ type Auditor audit.AuditorService
 func Check(auditor Auditor, action string, handle func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+		ctx, span := trace.StartSpan(r.Context(), "TODO")
 		defer span.End()
 		vars := mux.Vars(r)
 		auditParams := audit.GetParameters(ctx, r.URL.EscapedPath(), vars)

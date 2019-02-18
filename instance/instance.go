@@ -58,7 +58,7 @@ const (
 
 //GetList a list of all instances
 func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	logData := log.Data{}
 	stateFilterQuery := r.URL.Query().Get("state")
@@ -126,7 +126,7 @@ func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
 
 //Get a single instance by id
 func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
@@ -183,7 +183,7 @@ func (s *Store) Add(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	logData := log.Data{}
 	auditParams := common.Params{}
@@ -239,7 +239,7 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
@@ -504,7 +504,7 @@ type PublishCheck struct {
 // Check wraps a HTTP handle. Checks that the state is not published
 func (d *PublishCheck) Check(handle func(http.ResponseWriter, *http.Request), action string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+		ctx, span := trace.StartSpan(r.Context(), "TODO")
 		defer span.End()
 		vars := mux.Vars(r)
 		instanceID := vars["instance_id"]

@@ -22,7 +22,7 @@ func (s *Store) UpdateDimension(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]

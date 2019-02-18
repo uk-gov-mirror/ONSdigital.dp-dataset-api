@@ -22,7 +22,7 @@ import (
 // UpdateObservations increments the count of inserted_observations against
 // an instance
 func (s *Store) UpdateObservations(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
@@ -61,7 +61,7 @@ func (s *Store) UpdateImportTask(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	ctx, span := trace.StartSpan(r.Context(), "TODO")
 	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]

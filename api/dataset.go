@@ -9,12 +9,14 @@ import (
 
 	errs "github.com/ONSdigital/dp-dataset-api/apierrors"
 	"github.com/ONSdigital/dp-dataset-api/models"
+	"github.com/ONSdigital/dp-dataset-api/tracer"
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/request"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 var (
@@ -41,19 +43,32 @@ var (
 )
 
 func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "getDatasets")
+	defer span.End()
+
+	log.DebugCtx(ctx, "getDatasets endpoint: request recieved", nil)
+
+	span = tracer.StartSpanTrace(ctx, "Called: audit.Attempted", nil)
 	if err := api.auditor.Record(ctx, getDatasetsAction, audit.Attempted, nil); err != nil {
 		http.Error(w, errs.ErrInternalServer.Error(), http.StatusInternalServerError)
 		return
 	}
+	span.End()
 
 	b, err := func() ([]byte, error) {
+
+		span = tracer.StartSpanTrace(ctx, "Called: api.dataStore.Backend.GetDatasets()", nil)
 		datasets, err := api.dataStore.Backend.GetDatasets()
+		span.End()
+
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "api endpoint getDatasets datastore.GetDatasets returned an error"), nil)
 			return nil, err
 		}
+
+		span = tracer.StartSpanTrace(ctx, "Called: api.authenticate()", nil)
 		authorised, logData := api.authenticate(r, log.Data{})
+		span.End()
 
 		var b []byte
 		var datasetsResponse interface{}
@@ -66,7 +81,9 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 			datasetsResponse = &models.DatasetResults{Items: mapResults(datasets)}
 		}
 
+		span = tracer.StartSpanTrace(ctx, "Operation: json.Marshal(datasetsResponse)", nil)
 		b, err = json.Marshal(datasetsResponse)
+		span.End()
 
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "api endpoint getDatasets failed to marshal dataset resource into bytes"), logData)
@@ -77,17 +94,21 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
+		span = tracer.StartSpanTrace(ctx, "Called: audit.Unsuccessful)", nil)
 		if auditErr := api.auditor.Record(ctx, getDatasetsAction, audit.Unsuccessful, nil); auditErr != nil {
 			err = auditErr
 		}
 		handleDatasetAPIErr(ctx, err, w, nil)
+		span.End()
 		return
 	}
 
+	span = tracer.StartSpanTrace(ctx, "Called: audit.Successful", nil)
 	if auditErr := api.auditor.Record(ctx, getDatasetsAction, audit.Successful, nil); auditErr != nil {
 		handleDatasetAPIErr(ctx, auditErr, w, nil)
 		return
 	}
+	span.End()
 
 	setJSONContentType(w)
 	if _, err = w.Write(b); err != nil {
@@ -400,6 +421,8 @@ func mapResults(results []models.DatasetUpdate) []*models.Dataset {
 }
 
 func handleDatasetAPIErr(ctx context.Context, err error, w http.ResponseWriter, data log.Data) {
+	span := tracer.StartSpanTrace(ctx, "handleDatasetAPIErr", data)
+
 	if data == nil {
 		data = log.Data{}
 	}
@@ -422,4 +445,5 @@ func handleDatasetAPIErr(ctx context.Context, err error, w http.ResponseWriter, 
 	data["responseStatus"] = status
 	log.ErrorCtx(ctx, errors.WithMessage(err, "request unsuccessful"), data)
 	http.Error(w, err.Error(), status)
+	span.End()
 }

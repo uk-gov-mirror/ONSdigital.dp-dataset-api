@@ -24,6 +24,7 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.opencensus.io/trace"
 )
 
 var (
@@ -32,7 +33,8 @@ var (
 
 func createRequestWithToken(method, url string, body io.Reader) (*http.Request, error) {
 	r, err := http.NewRequest(method, url, body)
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	ctx = common.SetCaller(ctx, "someone@ons.gov.uk")
 	r = r.WithContext(ctx)
 	return r, err

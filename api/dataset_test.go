@@ -24,6 +24,8 @@ import (
 
 	"github.com/ONSdigital/dp-dataset-api/config"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -56,7 +58,8 @@ func GetAPIWithMockedDatastore(mockedDataStore store.Storer, mockedGeneratedDown
 
 func createRequestWithAuth(method, URL string, body io.Reader) (*http.Request, error) {
 	r, err := http.NewRequest(method, URL, body)
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	ctx = common.SetCaller(ctx, "someone@ons.gov.uk")
 	r = r.WithContext(ctx)
 	return r, err

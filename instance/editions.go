@@ -25,7 +25,7 @@ func (s *Store) confirmEdition(ctx context.Context, datasetID, edition, instance
 		editionDoc, err := s.GetEdition(datasetID, edition, "")
 		if err != nil {
 			if err != errs.ErrEditionNotFound {
-				log.ErrorCtx(ctx, err, logData)
+				log.ErrorCtx(ctx,err, logData)
 				return nil, action, err
 			}
 
@@ -45,7 +45,7 @@ func (s *Store) confirmEdition(ctx context.Context, datasetID, edition, instance
 			}
 
 			if err = editionDoc.UpdateLinks(s.Host); err != nil {
-				log.ErrorCtx(ctx, errors.WithMessage(err, "unable to update edition links"), logData)
+				log.ErrorCtx(ctx,errors.WithMessage(err, "unable to update edition links"), logData)
 				return nil, action, err
 			}
 		}
@@ -53,7 +53,7 @@ func (s *Store) confirmEdition(ctx context.Context, datasetID, edition, instance
 		editionDoc.Next.State = models.EditionConfirmedState
 
 		if err = s.UpsertEdition(datasetID, edition, editionDoc); err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "confirm edition: store.UpsertEdition returned an error"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "confirm edition: store.UpsertEdition returned an error"), logData)
 			return nil, action, err
 		}
 

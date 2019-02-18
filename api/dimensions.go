@@ -15,10 +15,13 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	"go.opencensus.io/trace"
 )
 
 func (api *DatasetAPI) getDimensions(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	edition := vars["edition"]
@@ -142,7 +145,8 @@ func convertBSONToDimensionOption(data interface{}) (*models.DimensionOption, er
 }
 
 func (api *DatasetAPI) getDimensionOptions(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	edition := vars["edition"]

@@ -20,6 +20,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+
+	"go.opencensus.io/trace"
 )
 
 //Store provides a backend for instances
@@ -56,7 +58,8 @@ const (
 
 //GetList a list of all instances
 func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	logData := log.Data{}
 	stateFilterQuery := r.URL.Query().Get("state")
 	datasetFilterQuery := r.URL.Query().Get("dataset")
@@ -85,20 +88,20 @@ func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
 	b, err := func() ([]byte, error) {
 		if len(stateFilterList) > 0 {
 			if err := models.ValidateStateFilter(stateFilterList); err != nil {
-				log.ErrorCtx(ctx, errors.WithMessage(err, "get instances: filter state invalid"), logData)
+				log.ErrorCtx(ctx,errors.WithMessage(err, "get instances: filter state invalid"), logData)
 				return nil, taskError{error: err, status: http.StatusBadRequest}
 			}
 		}
 
 		results, err := s.GetInstances(stateFilterList, datasetFilterList)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "get instances: store.GetInstances returned and error"), nil)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "get instances: store.GetInstances returned and error"), nil)
 			return nil, err
 		}
 
 		b, err := json.Marshal(results)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "get instances: failed to marshal results to json"), nil)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "get instances: failed to marshal results to json"), nil)
 			return nil, err
 		}
 		return b, nil
@@ -123,7 +126,8 @@ func (s *Store) GetList(w http.ResponseWriter, r *http.Request) {
 
 //Get a single instance by id
 func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	auditParams := common.Params{"instance_id": instanceID}
@@ -134,7 +138,7 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 	b, err := func() ([]byte, error) {
 		instance, err := s.GetInstance(instanceID)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "get instance: failed to retrieve instance"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "get instance: failed to retrieve instance"), logData)
 			return nil, err
 		}
 
@@ -142,14 +146,14 @@ func (s *Store) Get(w http.ResponseWriter, r *http.Request) {
 		// Early return if instance state is invalid
 		if err = models.CheckState("instance", instance.State); err != nil {
 			logData["state"] = instance.State
-			log.ErrorCtx(ctx, errors.WithMessage(err, "get instance: instance has an invalid state"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "get instance: instance has an invalid state"), logData)
 			return nil, err
 		}
 
 		log.InfoCtx(ctx, "instance get: marshalling instance json", logData)
 		b, err := json.Marshal(instance)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "get instance: failed to marshal instance to json"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "get instance: failed to marshal instance to json"), logData)
 			return nil, err
 		}
 
@@ -179,7 +183,8 @@ func (s *Store) Add(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	logData := log.Data{}
 	auditParams := common.Params{}
 
@@ -200,13 +205,13 @@ func (s *Store) Add(w http.ResponseWriter, r *http.Request) {
 
 		instance, err = s.AddInstance(instance)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance: store.AddInstance returned an error"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance: store.AddInstance returned an error"), logData)
 			return nil, err
 		}
 
 		b, err := json.Marshal(instance)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance: failed to marshal instance to json"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance: failed to marshal instance to json"), logData)
 			return nil, err
 		}
 
@@ -234,7 +239,8 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	auditParams := common.Params{"instance_id": instanceID}
@@ -245,7 +251,7 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 	if b, err = func() ([]byte, error) {
 		instance, err := unmarshalInstance(ctx, r.Body, false)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "instance update: failed unmarshalling json to model"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "instance update: failed unmarshalling json to model"), logData)
 			return nil, taskError{error: err, status: 400}
 		}
 
@@ -256,7 +262,7 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 		// Get the current document
 		currentInstance, err := s.GetInstance(instanceID)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "instance update: store.GetInstance returned error"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "instance update: store.GetInstance returned error"), logData)
 			return nil, err
 		}
 
@@ -264,7 +270,7 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 		logData["requested_state"] = instance.State
 		if instance.State != "" && instance.State != currentInstance.State {
 			if err = validateInstanceStateUpdate(instance, currentInstance); err != nil {
-				log.ErrorCtx(ctx, errors.Errorf("instance update: instance state invalid"), logData)
+				log.ErrorCtx(ctx,errors.Errorf("instance update: instance state invalid"), logData)
 				return nil, err
 			}
 		}
@@ -282,7 +288,7 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 
 			editionDoc, editionConfirmErr := s.confirmEdition(ctx, datasetID, edition, instanceID)
 			if editionConfirmErr != nil {
-				log.ErrorCtx(ctx, errors.WithMessage(editionConfirmErr, "instance update: store.getEdition returned an error"), editionLogData)
+				log.ErrorCtx(ctx,errors.WithMessage(editionConfirmErr, "instance update: store.getEdition returned an error"), editionLogData)
 				return nil, editionConfirmErr
 			}
 
@@ -296,12 +302,12 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 			instance.Links.Version = editionDoc.Next.Links.LatestVersion
 			instance.Version, editionConfirmErr = strconv.Atoi(editionDoc.Next.Links.LatestVersion.ID)
 			if editionConfirmErr != nil {
-				log.ErrorCtx(ctx, errors.WithMessage(editionConfirmErr, "instance update: failed to convert edition latestVersion id to instance.version int"), editionLogData)
+				log.ErrorCtx(ctx,errors.WithMessage(editionConfirmErr, "instance update: failed to convert edition latestVersion id to instance.version int"), editionLogData)
 				return nil, editionConfirmErr
 			}
 
 			if versionErr := s.AddVersionDetailsToInstance(ctx, currentInstance.InstanceID, datasetID, edition, instance.Version); versionErr != nil {
-				log.ErrorCtx(ctx, errors.WithMessage(versionErr, "instance update: datastore.AddVersionDetailsToInstance returned an error"), editionLogData)
+				log.ErrorCtx(ctx,errors.WithMessage(versionErr, "instance update: datastore.AddVersionDetailsToInstance returned an error"), editionLogData)
 				return nil, versionErr
 			}
 
@@ -311,18 +317,18 @@ func (s *Store) Update(w http.ResponseWriter, r *http.Request) {
 		// Set the current mongo timestamp on instance document
 		instance.UniqueTimestamp = currentInstance.UniqueTimestamp
 		if err = s.UpdateInstance(ctx, instanceID, instance); err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "instance update: store.UpdateInstance returned an error"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "instance update: store.UpdateInstance returned an error"), logData)
 			return nil, err
 		}
 
 		if instance, err = s.GetInstance(instanceID); err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "instance update: store.GetInstance for response returned an error"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "instance update: store.GetInstance for response returned an error"), logData)
 			return nil, err
 		}
 
 		b, err := json.Marshal(instance)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance: failed to marshal instance to json"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance: failed to marshal instance to json"), logData)
 			return nil, err
 		}
 
@@ -477,14 +483,14 @@ func unmarshalInstance(ctx context.Context, reader io.Reader, post bool) (*model
 }
 
 func internalError(ctx context.Context, w http.ResponseWriter, err error) {
-	log.ErrorCtx(ctx, err, nil)
+	log.ErrorCtx(ctx,err, nil)
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func writeBody(ctx context.Context, w http.ResponseWriter, b []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(b); err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.ErrorCtx(ctx,err, nil)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -498,7 +504,8 @@ type PublishCheck struct {
 // Check wraps a HTTP handle. Checks that the state is not published
 func (d *PublishCheck) Check(handle func(http.ResponseWriter, *http.Request), action string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+		defer span.End()
 		vars := mux.Vars(r)
 		instanceID := vars["instance_id"]
 		logData := log.Data{"instance_id": instanceID}
@@ -509,7 +516,7 @@ func (d *PublishCheck) Check(handle func(http.ResponseWriter, *http.Request), ac
 		}
 
 		if err := d.checkState(instanceID, logData, auditParams); err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "errored whilst checking instance state"), logData)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "errored whilst checking instance state"), logData)
 			if auditErr := d.Auditor.Record(ctx, action, audit.Unsuccessful, auditParams); auditErr != nil {
 				handleInstanceErr(ctx, errs.ErrAuditActionAttemptedFailure, w, logData)
 				return
@@ -568,6 +575,6 @@ func handleInstanceErr(ctx context.Context, err error, w http.ResponseWriter, lo
 	}
 
 	logData["responseStatus"] = status
-	log.ErrorCtx(ctx, errors.WithMessage(err, "request unsuccessful"), logData)
+	log.ErrorCtx(ctx,errors.WithMessage(err, "request unsuccessful"), logData)
 	http.Error(w, response.Error(), status)
 }

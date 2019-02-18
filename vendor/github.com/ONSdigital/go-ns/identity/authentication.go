@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/request"
 	"github.com/gorilla/mux"
+	"go.opencensus.io/trace"
 )
 
 // Auditor is an alias for the auditor service
@@ -18,7 +19,8 @@ type Auditor audit.AuditorService
 func Check(auditor Auditor, action string, handle func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+		defer span.End()
 		vars := mux.Vars(r)
 		auditParams := audit.GetParameters(ctx, r.URL.EscapedPath(), vars)
 		logData := audit.ToLogData(auditParams)

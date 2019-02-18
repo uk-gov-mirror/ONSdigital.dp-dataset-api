@@ -15,6 +15,8 @@ import (
 	"github.com/ONSdigital/dp-dataset-api/schema"
 	"github.com/ONSdigital/dp-dataset-api/store"
 	"github.com/ONSdigital/dp-filter/observation"
+	"go.opencensus.io/exporter/jaeger"
+	"go.opencensus.io/trace"
 
 	"github.com/ONSdigital/go-ns/audit"
 	"github.com/ONSdigital/go-ns/healthcheck"
@@ -40,6 +42,21 @@ type DatsetAPIStore struct {
 
 func main() {
 	log.Namespace = "dp-dataset-api"
+
+	exporter, err := jaeger.NewExporter(jaeger.Options{
+		Endpoint: "http://localhost:14268",
+		Process: jaeger.Process{
+			ServiceName: log.Namespace,
+		},
+	})
+	if err != nil {
+		log.Error(err, nil)
+	}
+
+	trace.ApplyConfig(trace.Config{
+		DefaultSampler: trace.AlwaysSample(),
+	})
+	trace.RegisterExporter(exporter)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)

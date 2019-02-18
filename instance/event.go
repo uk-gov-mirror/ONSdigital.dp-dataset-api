@@ -13,6 +13,7 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 // AddInstanceEventAction represents the audit action to add event
@@ -33,7 +34,8 @@ func unmarshalEvent(reader io.Reader) (*models.Event, error) {
 
 //AddEvent details to an instance
 func (s *Store) AddEvent(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+	defer span.End()
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)
@@ -44,17 +46,17 @@ func (s *Store) AddEvent(w http.ResponseWriter, r *http.Request) {
 	if err := func() error {
 		event, err := unmarshalEvent(r.Body)
 		if err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance event: failed to unmarshal request body"), data)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance event: failed to unmarshal request body"), data)
 			return err
 		}
 
 		if err = event.Validate(); err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance event: failed to validate event object"), data)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance event: failed to validate event object"), data)
 			return err
 		}
 
 		if err = s.AddEventToInstance(instanceID, event); err != nil {
-			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance event: failed to add event to instance in datastore"), data)
+			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance event: failed to add event to instance in datastore"), data)
 			return err
 		}
 

@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 var httpServer *server.Server
@@ -191,7 +192,8 @@ func Routes(cfg config.Configuration, router *mux.Router, dataStore store.DataSt
 func (d *PublishCheck) Check(handle func(http.ResponseWriter, *http.Request), action string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := r.Context()
+		ctx, span := trace.StartSpan(r.Context(), "cache.Get")
+		defer span.End()
 		vars := mux.Vars(r)
 		datasetID := vars["dataset_id"]
 		edition := vars["edition"]

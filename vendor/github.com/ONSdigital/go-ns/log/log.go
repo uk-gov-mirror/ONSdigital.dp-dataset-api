@@ -15,6 +15,8 @@ import (
 
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/mgutz/ansi"
+
+	"go.opencensus.io/trace"
 )
 
 // Namespace is the service namespace used for logging
@@ -185,6 +187,7 @@ func ErrorC(correlationKey string, err error, data Data) {
 // ErrorCtx is a structured error message and retrieves the correlationKey from go context
 func ErrorCtx(ctx context.Context, err error, data Data) {
 	correlationKey := common.GetRequestId(ctx)
+	createContextualSpan(ctx, data, "ErrorCtx")
 	ErrorC(correlationKey, err, data)
 }
 
@@ -212,6 +215,7 @@ func DebugC(correlationKey string, message string, data Data) {
 // DebugCtx is a structured debug message and retrieves the correlationKey from go context
 func DebugCtx(ctx context.Context, message string, data Data) {
 	correlationKey := common.GetRequestId(ctx)
+	createContextualSpan(ctx, data, "DebugCtx: "+message)
 	DebugC(correlationKey, message, data)
 }
 
@@ -239,6 +243,7 @@ func TraceC(correlationKey string, message string, data Data) {
 // TraceCtx is a structured trace message and retrieves the correlationKey from go context
 func TraceCtx(ctx context.Context, message string, data Data) {
 	correlationKey := common.GetRequestId(ctx)
+	createContextualSpan(ctx, data, "TraceCtx: "+message)
 	TraceC(correlationKey, message, data)
 }
 
@@ -266,6 +271,7 @@ func InfoC(correlationKey string, message string, data Data) {
 // InfoCtx is a structured info message and retrieves the correlationKey from go context
 func InfoCtx(ctx context.Context, message string, data Data) {
 	correlationKey := common.GetRequestId(ctx)
+	createContextualSpan(ctx, data, "InfoCtx: "+message)
 	InfoC(correlationKey, message, data)
 }
 
@@ -277,4 +283,27 @@ func InfoR(req *http.Request, message string, data Data) {
 // Info is a structured info message
 func Info(message string, data Data) {
 	InfoC("", message, data)
+}
+
+func createContextualSpan(ctx context.Context, data Data, message string) {
+	_, span := trace.StartSpan(ctx, message)
+	if span == nil {
+		// TODO ....something!
+	}
+
+	if message != "" {
+		span.AddAttributes(trace.StringAttribute("msg", message))
+	}
+
+	requestID := common.GetRequestId(ctx)
+	span.AddAttributes(trace.StringAttribute("requestID", requestID))
+
+	// Create span attributes from the data struct
+	for k, v := range data {
+		switch v := v.(type) {
+		case string:
+			span.AddAttributes(trace.StringAttribute(k, v))
+		}
+	}
+	span.End()
 }

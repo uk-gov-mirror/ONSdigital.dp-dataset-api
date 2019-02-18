@@ -46,17 +46,17 @@ func (s *Store) AddEvent(w http.ResponseWriter, r *http.Request) {
 	if err := func() error {
 		event, err := unmarshalEvent(r.Body)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance event: failed to unmarshal request body"), data)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance event: failed to unmarshal request body"), data)
 			return err
 		}
 
 		if err = event.Validate(); err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance event: failed to validate event object"), data)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance event: failed to validate event object"), data)
 			return err
 		}
 
 		if err = s.AddEventToInstance(instanceID, event); err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "add instance event: failed to add event to instance in datastore"), data)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "add instance event: failed to add event to instance in datastore"), data)
 			return err
 		}
 

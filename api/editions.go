@@ -38,13 +38,13 @@ func (api *DatasetAPI) getEditions(w http.ResponseWriter, r *http.Request) {
 		logData["state"] = state
 
 		if err := api.dataStore.Backend.CheckDatasetExists(datasetID, state); err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "getEditions endpoint: unable to find dataset"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "getEditions endpoint: unable to find dataset"), logData)
 			return nil, err
 		}
 
 		results, err := api.dataStore.Backend.GetEditions(datasetID, state)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "getEditions endpoint: unable to find editions for dataset"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "getEditions endpoint: unable to find editions for dataset"), logData)
 			return nil, err
 		}
 
@@ -55,7 +55,7 @@ func (api *DatasetAPI) getEditions(w http.ResponseWriter, r *http.Request) {
 			// User has valid authentication to get raw edition document
 			editionBytes, err = json.Marshal(results)
 			if err != nil {
-				log.ErrorCtx(ctx,errors.WithMessage(err, "getEditions endpoint: failed to marshal a list of edition resources into bytes"), logData)
+				log.ErrorCtx(ctx, errors.WithMessage(err, "getEditions endpoint: failed to marshal a list of edition resources into bytes"), logData)
 				return nil, err
 			}
 			log.InfoCtx(ctx, "getEditions endpoint: get all edition with auth", logData)
@@ -69,7 +69,7 @@ func (api *DatasetAPI) getEditions(w http.ResponseWriter, r *http.Request) {
 
 			editionBytes, err = json.Marshal(&models.EditionResults{Items: publicResults})
 			if err != nil {
-				log.ErrorCtx(ctx,errors.WithMessage(err, "getEditions endpoint: failed to marshal a list of edition resources into bytes"), logData)
+				log.ErrorCtx(ctx, errors.WithMessage(err, "getEditions endpoint: failed to marshal a list of edition resources into bytes"), logData)
 				return nil, err
 			}
 			log.InfoCtx(ctx, "getEditions endpoint: get all edition without auth", logData)
@@ -98,7 +98,7 @@ func (api *DatasetAPI) getEditions(w http.ResponseWriter, r *http.Request) {
 	setJSONContentType(w)
 	_, err = w.Write(b)
 	if err != nil {
-		log.ErrorCtx(ctx,errors.WithMessage(err, "getEditions endpoint: failed writing bytes to response"), logData)
+		log.ErrorCtx(ctx, errors.WithMessage(err, "getEditions endpoint: failed writing bytes to response"), logData)
 		http.Error(w, errs.ErrInternalServer.Error(), http.StatusInternalServerError)
 	}
 	log.InfoCtx(ctx, "getEditions endpoint: request successful", logData)
@@ -127,13 +127,13 @@ func (api *DatasetAPI) getEdition(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := api.dataStore.Backend.CheckDatasetExists(datasetID, state); err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "getEdition endpoint: unable to find dataset"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "getEdition endpoint: unable to find dataset"), logData)
 			return nil, err
 		}
 
 		edition, err := api.dataStore.Backend.GetEdition(datasetID, edition, state)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "getEdition endpoint: unable to find edition"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "getEdition endpoint: unable to find edition"), logData)
 			return nil, err
 		}
 
@@ -143,7 +143,7 @@ func (api *DatasetAPI) getEdition(w http.ResponseWriter, r *http.Request) {
 			// User has valid authentication to get raw edition document
 			b, err = json.Marshal(edition)
 			if err != nil {
-				log.ErrorCtx(ctx,errors.WithMessage(err, "getEdition endpoint: failed to marshal edition resource into bytes"), logData)
+				log.ErrorCtx(ctx, errors.WithMessage(err, "getEdition endpoint: failed to marshal edition resource into bytes"), logData)
 				return nil, err
 			}
 			log.InfoCtx(ctx, "getEdition endpoint: get edition with auth", logData)
@@ -152,7 +152,7 @@ func (api *DatasetAPI) getEdition(w http.ResponseWriter, r *http.Request) {
 			// User is not authenticated and hence has only access to current sub document
 			b, err = json.Marshal(edition.Current)
 			if err != nil {
-				log.ErrorCtx(ctx,errors.WithMessage(err, "getEdition endpoint: failed to marshal edition resource into bytes"), logData)
+				log.ErrorCtx(ctx, errors.WithMessage(err, "getEdition endpoint: failed to marshal edition resource into bytes"), logData)
 				return nil, err
 			}
 			log.InfoCtx(ctx, "getEdition endpoint: get edition without auth", logData)
@@ -181,7 +181,7 @@ func (api *DatasetAPI) getEdition(w http.ResponseWriter, r *http.Request) {
 	setJSONContentType(w)
 	_, err = w.Write(b)
 	if err != nil {
-		log.ErrorCtx(ctx,errors.WithMessage(err, "getEdition endpoint: failed to write byte to response"), logData)
+		log.ErrorCtx(ctx, errors.WithMessage(err, "getEdition endpoint: failed to write byte to response"), logData)
 		http.Error(w, errs.ErrInternalServer.Error(), http.StatusInternalServerError)
 		return
 	}

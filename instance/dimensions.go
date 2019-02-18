@@ -35,7 +35,7 @@ func (s *Store) UpdateDimension(w http.ResponseWriter, r *http.Request) {
 	if err := func() error {
 		instance, err := s.GetInstance(instanceID)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "update instance dimension: Failed to GET instance"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "update instance dimension: Failed to GET instance"), logData)
 			return err
 		}
 		auditParams["instance_state"] = instance.State
@@ -43,14 +43,14 @@ func (s *Store) UpdateDimension(w http.ResponseWriter, r *http.Request) {
 		// Early return if instance state is invalid
 		if err = models.CheckState("instance", instance.State); err != nil {
 			logData["state"] = instance.State
-			log.ErrorCtx(ctx,errors.WithMessage(err, "update instance dimension: current instance has an invalid state"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "update instance dimension: current instance has an invalid state"), logData)
 			return err
 		}
 
 		// Read and unmarshal request body
 		b, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "update instance dimension: error reading request.body"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "update instance dimension: error reading request.body"), logData)
 			return errs.ErrUnableToReadMessage
 		}
 
@@ -58,7 +58,7 @@ func (s *Store) UpdateDimension(w http.ResponseWriter, r *http.Request) {
 
 		err = json.Unmarshal(b, &dim)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "update instance dimension: failing to model models.Codelist resource based on request"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "update instance dimension: failing to model models.Codelist resource based on request"), logData)
 			return errs.ErrUnableToParseJSON
 		}
 
@@ -82,7 +82,7 @@ func (s *Store) UpdateDimension(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if notFound {
-			log.ErrorCtx(ctx,errors.WithMessage(errs.ErrDimensionNotFound, "update instance dimension: dimension not found"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(errs.ErrDimensionNotFound, "update instance dimension: dimension not found"), logData)
 			return errs.ErrDimensionNotFound
 		}
 
@@ -94,7 +94,7 @@ func (s *Store) UpdateDimension(w http.ResponseWriter, r *http.Request) {
 
 		// Update instance
 		if err = s.UpdateInstance(ctx, instanceID, instanceUpdate); err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "update instance dimension: failed to update instance with new dimension label/description"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "update instance dimension: failed to update instance with new dimension label/description"), logData)
 			return err
 		}
 

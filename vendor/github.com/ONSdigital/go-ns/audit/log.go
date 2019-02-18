@@ -29,7 +29,7 @@ func LogActionFailure(ctx context.Context, auditedAction string, auditedResult s
 func LogError(ctx context.Context, err error, data log.Data) {
 	data = addLogData(ctx, data)
 
-	log.ErrorCtx(ctx,err, data)
+	log.ErrorCtx(ctx, err, data)
 }
 
 // LogInfo creates a structured info message when auditing succeeds

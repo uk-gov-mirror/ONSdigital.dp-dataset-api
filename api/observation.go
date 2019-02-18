@@ -97,7 +97,7 @@ func (api *DatasetAPI) getObservations(w http.ResponseWriter, r *http.Request) {
 		// get dataset document
 		datasetDoc, err := api.dataStore.Backend.GetDataset(datasetID)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: datastore.GetDataset returned an error"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: datastore.GetDataset returned an error"), logData)
 			return nil, err
 		}
 
@@ -113,7 +113,7 @@ func (api *DatasetAPI) getObservations(w http.ResponseWriter, r *http.Request) {
 			// Check for current sub document
 			if datasetDoc.Current == nil || datasetDoc.Current.State != models.PublishedState {
 				logData["dataset_doc"] = datasetDoc.Current
-				log.ErrorCtx(ctx,errors.WithMessage(errs.ErrDatasetNotFound, "get observations: found no published dataset"), logData)
+				log.ErrorCtx(ctx, errors.WithMessage(errs.ErrDatasetNotFound, "get observations: found no published dataset"), logData)
 				return nil, errs.ErrDatasetNotFound
 			}
 
@@ -124,25 +124,25 @@ func (api *DatasetAPI) getObservations(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err = api.dataStore.Backend.CheckEditionExists(datasetID, edition, state); err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: failed to find edition for dataset"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: failed to find edition for dataset"), logData)
 			return nil, err
 		}
 
 		versionDoc, err := api.dataStore.Backend.GetVersion(datasetID, edition, version, state)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: failed to find version for dataset edition"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: failed to find version for dataset edition"), logData)
 			return nil, err
 		}
 
 		if err = models.CheckState("version", versionDoc.State); err != nil {
 			logData["state"] = versionDoc.State
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: unpublished version has an invalid state"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: unpublished version has an invalid state"), logData)
 			return nil, err
 		}
 
 		if versionDoc.Headers == nil || versionDoc.Dimensions == nil {
 			logData["version_doc"] = versionDoc
-			log.ErrorCtx(ctx,errors.WithMessage(errs.ErrMissingVersionHeadersOrDimensions, "get observations"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(errs.ErrMissingVersionHeadersOrDimensions, "get observations"), logData)
 			return nil, errs.ErrMissingVersionHeadersOrDimensions
 		}
 
@@ -152,14 +152,14 @@ func (api *DatasetAPI) getObservations(w http.ResponseWriter, r *http.Request) {
 
 		dimensionOffset, err := getDimensionOffsetInHeaderRow(versionDoc.Headers)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: unable to distinguish headers from version document"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: unable to distinguish headers from version document"), logData)
 			return nil, err
 		}
 
 		// check query parameters match the version headers
 		queryParameters, err := extractQueryParameters(r.URL.Query(), validDimensionNames)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: error extracting query parameters"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: error extracting query parameters"), logData)
 			return nil, err
 		}
 		logData["query_parameters"] = queryParameters
@@ -167,7 +167,7 @@ func (api *DatasetAPI) getObservations(w http.ResponseWriter, r *http.Request) {
 		// retrieve observations
 		observations, err := api.getObservationList(versionDoc, queryParameters, defaultObservationLimit, dimensionOffset, logData)
 		if err != nil {
-			log.ErrorCtx(ctx,errors.WithMessage(err, "get observations: unable to retrieve observations"), logData)
+			log.ErrorCtx(ctx, errors.WithMessage(err, "get observations: unable to retrieve observations"), logData)
 			return nil, err
 		}
 
@@ -417,6 +417,6 @@ func handleObservationsErrorType(ctx context.Context, w http.ResponseWriter, err
 	}
 
 	data["responseStatus"] = status
-	log.ErrorCtx(ctx,errors.WithMessage(err, "get observation endpoint: request unsuccessful"), data)
+	log.ErrorCtx(ctx, errors.WithMessage(err, "get observation endpoint: request unsuccessful"), data)
 	http.Error(w, err.Error(), status)
 }

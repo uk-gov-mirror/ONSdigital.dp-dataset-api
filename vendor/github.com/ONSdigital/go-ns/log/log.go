@@ -15,7 +15,6 @@ import (
 
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/mgutz/ansi"
-
 	"go.opencensus.io/trace"
 )
 

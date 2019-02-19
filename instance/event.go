@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 // AddInstanceEventAction represents the audit action to add event
@@ -34,8 +33,8 @@ func unmarshalEvent(reader io.Reader) (*models.Event, error) {
 
 //AddEvent details to an instance
 func (s *Store) AddEvent(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	defer r.Body.Close()
 
 	vars := mux.Vars(r)

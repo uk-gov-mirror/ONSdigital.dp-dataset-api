@@ -15,7 +15,6 @@ import (
 	"github.com/ONSdigital/go-ns/request"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 var (
@@ -52,8 +51,8 @@ func (v VersionDetails) baseAuditParams() common.Params {
 }
 
 func (api *DatasetAPI) getVersions(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	edition := vars["edition"]
@@ -151,8 +150,8 @@ func (api *DatasetAPI) getVersions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *DatasetAPI) getVersion(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	edition := vars["edition"]
@@ -250,8 +249,8 @@ func (api *DatasetAPI) putVersion(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	versionDetails := VersionDetails{
 		datasetID: vars["dataset_id"],

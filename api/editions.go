@@ -11,12 +11,11 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 func (api *DatasetAPI) getEditions(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	logData := log.Data{"dataset_id": datasetID}
@@ -105,8 +104,8 @@ func (api *DatasetAPI) getEditions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *DatasetAPI) getEdition(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	edition := vars["edition"]

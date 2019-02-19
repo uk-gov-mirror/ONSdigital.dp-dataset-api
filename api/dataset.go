@@ -48,7 +48,7 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 
 	log.DebugCtx(ctx, "getDatasets endpoint: request recieved", nil)
 
-	span = tracer.StartSpanTrace(ctx, "Called: audit.Attempted", nil)
+	span = tracer.StartSpanTrace(ctx, "audit.Attempted", nil)
 	if err := api.auditor.Record(ctx, getDatasetsAction, audit.Attempted, nil); err != nil {
 		http.Error(w, errs.ErrInternalServer.Error(), http.StatusInternalServerError)
 		return
@@ -57,7 +57,7 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 
 	b, err := func() ([]byte, error) {
 
-		span = tracer.StartSpanTrace(ctx, "Called: api.dataStore.Backend.GetDatasets()", nil)
+		span = tracer.StartSpanTrace(ctx, "api.dataStore.Backend.GetDatasets()", nil)
 		datasets, err := api.dataStore.Backend.GetDatasets()
 		span.End()
 
@@ -66,7 +66,7 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		span = tracer.StartSpanTrace(ctx, "Called: api.authenticate()", nil)
+		span = tracer.StartSpanTrace(ctx, "api.authenticate()", nil)
 		authorised, logData := api.authenticate(r, log.Data{})
 		span.End()
 
@@ -81,7 +81,7 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 			datasetsResponse = &models.DatasetResults{Items: mapResults(datasets)}
 		}
 
-		span = tracer.StartSpanTrace(ctx, "Operation: json.Marshal(datasetsResponse)", nil)
+		span = tracer.StartSpanTrace(ctx, "json.Marshal(datasetsResponse)", nil)
 		b, err = json.Marshal(datasetsResponse)
 		span.End()
 
@@ -94,7 +94,7 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
-		span = tracer.StartSpanTrace(ctx, "Called: audit.Unsuccessful)", nil)
+		span = tracer.StartSpanTrace(ctx, "audit.Unsuccessful)", nil)
 		if auditErr := api.auditor.Record(ctx, getDatasetsAction, audit.Unsuccessful, nil); auditErr != nil {
 			err = auditErr
 		}
@@ -103,42 +103,53 @@ func (api *DatasetAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	span = tracer.StartSpanTrace(ctx, "Called: audit.Successful", nil)
+	span = tracer.StartSpanTrace(ctx, "audit.Successful", nil)
 	if auditErr := api.auditor.Record(ctx, getDatasetsAction, audit.Successful, nil); auditErr != nil {
 		handleDatasetAPIErr(ctx, auditErr, w, nil)
 		return
 	}
 	span.End()
 
+	span = tracer.StartSpanTrace(ctx, "Write json content", nil)
 	setJSONContentType(w)
 	if _, err = w.Write(b); err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "api endpoint getDatasets error writing response body"), nil)
 		handleDatasetAPIErr(ctx, err, w, nil)
 		return
 	}
+	span.End()
+
 	log.InfoCtx(ctx, "api endpoint getDatasets request successful", nil)
 }
 
 func (api *DatasetAPI) getDataset(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "getDataset")
+	defer span.End()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	logData := log.Data{"dataset_id": datasetID}
 	auditParams := common.Params{"dataset_id": datasetID}
 
+	span = tracer.StartSpanTrace(ctx, "audit.Attempted", logData)
 	if auditErr := api.auditor.Record(ctx, getDatasetAction, audit.Attempted, auditParams); auditErr != nil {
 		handleDatasetAPIErr(ctx, errs.ErrInternalServer, w, logData)
 		return
 	}
+	span.End()
 
 	b, err := func() ([]byte, error) {
+		span = tracer.StartSpanTrace(ctx, "api.dataStore.Backend.GetDataset()", logData)
 		dataset, err := api.dataStore.Backend.GetDataset(datasetID)
+		span.End()
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "getDataset endpoint: dataStore.Backend.GetDataset returned an error"), logData)
 			return nil, err
 		}
 
+		span = tracer.StartSpanTrace(ctx, "api.authenticate()", logData)
 		authorised, logData := api.authenticate(r, logData)
+		span.End()
 
 		var b []byte
 		var datasetResponse interface{}
@@ -164,20 +175,24 @@ func (api *DatasetAPI) getDataset(w http.ResponseWriter, r *http.Request) {
 			datasetResponse = dataset
 		}
 
+		span = tracer.StartSpanTrace(ctx, "json.Marshal(datasetResponse)", logData)
 		b, err = json.Marshal(datasetResponse)
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "getDataset endpoint: failed to marshal dataset resource into bytes"), logData)
 			return nil, err
 		}
+		span.End()
 
 		return b, nil
 	}()
 
 	if err != nil {
+		span = tracer.StartSpanTrace(ctx, "json.Marshal(datasetResponse)", logData)
 		if auditErr := api.auditor.Record(ctx, getDatasetAction, audit.Unsuccessful, auditParams); auditErr != nil {
 			err = auditErr
 		}
 		handleDatasetAPIErr(ctx, err, w, logData)
+		span.End()
 		return
 	}
 
@@ -186,19 +201,23 @@ func (api *DatasetAPI) getDataset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	span = tracer.StartSpanTrace(ctx, "Write json content", logData)
 	setJSONContentType(w)
 	if _, err = w.Write(b); err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "getDataset endpoint: error writing bytes to response"), logData)
 		handleDatasetAPIErr(ctx, err, w, logData)
 	}
 	log.InfoCtx(ctx, "getDataset endpoint: request successful", logData)
+	span.End()
 }
 
 func (api *DatasetAPI) addDataset(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "getDataset")
+	defer span.End()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 
@@ -207,7 +226,11 @@ func (api *DatasetAPI) addDataset(w http.ResponseWriter, r *http.Request) {
 
 	// TODO Could just do an insert, if dataset already existed we would get a duplicate key error instead of reading then writing doc
 	b, err := func() ([]byte, error) {
+
+		span = tracer.StartSpanTrace(ctx, "api.dataStore.Backend.GetDataset(datasetID)", logData)
 		_, err := api.dataStore.Backend.GetDataset(datasetID)
+		span.End()
+
 		if err != nil {
 			if err != errs.ErrDatasetNotFound {
 				log.ErrorCtx(ctx, errors.WithMessage(err, "addDataset endpoint: error checking if dataset exists"), logData)
@@ -218,7 +241,10 @@ func (api *DatasetAPI) addDataset(w http.ResponseWriter, r *http.Request) {
 			return nil, errs.ErrAddDatasetAlreadyExists
 		}
 
+		span = tracer.StartSpanTrace(ctx, "models.CreateDataset(r.Body)", logData)
 		dataset, err := models.CreateDataset(r.Body)
+		span.End()
+
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "addDataset endpoint: failed to model dataset resource based on request"), logData)
 			return nil, errs.ErrAddUpdateDatasetBadRequest
@@ -249,13 +275,18 @@ func (api *DatasetAPI) addDataset(w http.ResponseWriter, r *http.Request) {
 			Next: dataset,
 		}
 
+		span = tracer.StartSpanTrace(ctx, "api.dataStore.Backend.UpsertDataset(datasetID, datasetDoc)", logData)
 		if err = api.dataStore.Backend.UpsertDataset(datasetID, datasetDoc); err != nil {
 			logData["new_dataset"] = datasetID
 			log.ErrorCtx(ctx, errors.WithMessage(err, "addDataset endpoint: failed to insert dataset resource to datastore"), logData)
 			return nil, err
 		}
+		span.End()
 
+		span = tracer.StartSpanTrace(ctx, "json.Marshal(datasetDoc)", logData)
 		b, err := json.Marshal(datasetDoc)
+		span.End()
+
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "addDataset endpoint: failed to marshal dataset resource into bytes"), logData)
 			return nil, err
@@ -264,19 +295,27 @@ func (api *DatasetAPI) addDataset(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
+		span = tracer.StartSpanTrace(ctx, "audit.Unsuccessful", logData)
 		api.auditor.Record(ctx, addDatasetAction, audit.Unsuccessful, auditParams)
+		span.End()
+
 		handleDatasetAPIErr(ctx, err, w, logData)
 		return
 	}
 
+	span = tracer.StartSpanTrace(ctx, "audit.Successful", logData)
 	api.auditor.Record(ctx, addDatasetAction, audit.Successful, auditParams)
+	span.End()
 
+	span = tracer.StartSpanTrace(ctx, "Write json content", logData)
 	setJSONContentType(w)
 	w.WriteHeader(http.StatusCreated)
 	if _, err = w.Write(b); err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "addDataset endpoint: error writing bytes to response"), logData)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	span.End()
+
 	log.InfoCtx(ctx, "addDataset endpoint: request completed successfully", logData)
 }
 
@@ -284,7 +323,9 @@ func (api *DatasetAPI) putDataset(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "getDataset")
+	defer span.End()
+
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	data := log.Data{"dataset_id": datasetID}
@@ -292,17 +333,21 @@ func (api *DatasetAPI) putDataset(w http.ResponseWriter, r *http.Request) {
 
 	err := func() error {
 
+		span = tracer.StartSpanTrace(ctx, "models.CreateDataset(r.Body)", data)
 		dataset, err := models.CreateDataset(r.Body)
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "putDataset endpoint: failed to model dataset resource based on request"), data)
 			return errs.ErrAddUpdateDatasetBadRequest
 		}
+		span.End()
 
+		span = tracer.StartSpanTrace(ctx, "api.dataStore.Backend.GetDataset(datasetID)", data)
 		currentDataset, err := api.dataStore.Backend.GetDataset(datasetID)
 		if err != nil {
 			log.ErrorCtx(ctx, errors.WithMessage(err, "putDataset endpoint: datastore.getDataset returned an error"), data)
 			return err
 		}
+		span.End()
 
 		if dataset.State == models.PublishedState {
 			if err := api.publishDataset(ctx, currentDataset, nil); err != nil {
@@ -319,19 +364,28 @@ func (api *DatasetAPI) putDataset(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
+		span = tracer.StartSpanTrace(ctx, "audit.Unsuccessful", data)
 		api.auditor.Record(ctx, updateDatasetAction, audit.Unsuccessful, auditParams)
+		span.End()
+
 		handleDatasetAPIErr(ctx, err, w, data)
 		return
 	}
 
+	span = tracer.StartSpanTrace(ctx, "audit.Successful", data)
 	api.auditor.Record(ctx, updateDatasetAction, audit.Successful, auditParams)
+	span.End()
 
+	span = tracer.StartSpanTrace(ctx, "Write json content", data)
 	setJSONContentType(w)
 	w.WriteHeader(http.StatusOK)
+	span.End()
+
 	log.InfoCtx(ctx, "putDataset endpoint: request successful", data)
 }
 
 func (api *DatasetAPI) publishDataset(ctx context.Context, currentDataset *models.DatasetUpdate, version *models.Version) error {
+
 	if version != nil {
 		currentDataset.Next.CollectionID = ""
 
@@ -354,16 +408,19 @@ func (api *DatasetAPI) publishDataset(ctx context.Context, currentDataset *model
 		Next:    currentDataset.Next,
 	}
 
+	span := tracer.StartSpanTrace(ctx, "api.dataStore.Backend.UpsertDataset(currentDataset.ID, newDataset)", nil)
 	if err := api.dataStore.Backend.UpsertDataset(currentDataset.ID, newDataset); err != nil {
 		log.ErrorCtx(ctx, errors.WithMessage(err, "unable to update dataset"), log.Data{"dataset_id": currentDataset.ID})
 		return err
 	}
+	span.End()
 
 	return nil
 }
 
 func (api *DatasetAPI) deleteDataset(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, span := trace.StartSpan(r.Context(), "getDataset")
+	defer span.End()
 	vars := mux.Vars(r)
 	datasetID := vars["dataset_id"]
 	logData := log.Data{"dataset_id": datasetID}

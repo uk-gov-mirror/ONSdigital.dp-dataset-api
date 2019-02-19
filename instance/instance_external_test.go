@@ -24,8 +24,6 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"go.opencensus.io/trace"
 )
 
 const host = "http://localhost:8080"
@@ -34,8 +32,8 @@ var errAudit = errors.New("auditing error")
 
 func createRequestWithToken(method, url string, body io.Reader) (*http.Request, error) {
 	r, err := http.NewRequest(method, url, body)
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	ctx = common.SetCaller(ctx, "someone@ons.gov.uk")
 	r = r.WithContext(ctx)
 	return r, err

@@ -16,14 +16,13 @@ import (
 	"github.com/ONSdigital/go-ns/request"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 // UpdateObservations increments the count of inserted_observations against
 // an instance
 func (s *Store) UpdateObservations(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	insert := vars["inserted_observations"]
@@ -61,8 +60,8 @@ func (s *Store) UpdateImportTask(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	auditParams := common.Params{"instance_id": instanceID}

@@ -14,7 +14,6 @@ import (
 	"github.com/ONSdigital/go-ns/request"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"go.opencensus.io/trace"
 )
 
 // Store provides a backend for dimensions
@@ -37,8 +36,8 @@ func dimensionError(err error, message, action string) error {
 
 // GetDimensionsHandler returns a list of all dimensions and their options for an instance resource
 func (s *Store) GetDimensionsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	auditParams := common.Params{"instance_id": instanceID}
@@ -94,8 +93,8 @@ func (s *Store) getDimensions(ctx context.Context, instanceID string, logData lo
 
 // GetUniqueDimensionAndOptionsHandler returns a list of dimension options for a dimension of an instance
 func (s *Store) GetUniqueDimensionAndOptionsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	dimension := vars["dimension"]
@@ -155,8 +154,7 @@ func (s *Store) AddHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer request.DrainBody(r)
 
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
 
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
@@ -216,8 +214,8 @@ func (s *Store) add(ctx context.Context, instanceID string, option *models.Cache
 // AddNodeIDHandler against a specific option for dimension
 func (s *Store) AddNodeIDHandler(w http.ResponseWriter, r *http.Request) {
 
-	ctx, span := trace.StartSpan(r.Context(), "TODO")
-	defer span.End()
+	ctx := r.Context()
+
 	vars := mux.Vars(r)
 	instanceID := vars["instance_id"]
 	dimensionName := vars["dimension"]

@@ -68,6 +68,7 @@ var (
 
 	ConflictRequestMap = map[error]bool{
 		ErrConflictUpdatingInstance: true,
+		ErrVersionAlreadyExists: true,
 	}
 
 	ForbiddenMap = map[error]bool{
